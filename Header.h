@@ -1,11 +1,13 @@
-#ifndef VOLINFO_H
-#define VOLINFO_H
+#ifndef _HEADER_H_
+#define _HEADER_H_
 
 #include <cstdlib>
+#include <stdint.h>
 #include <cstring>
 #include <string>
 #include <fstream>
 #include <ctime>
+#include <endian.h>
 #include <iostream>
 
 using namespace std;
@@ -13,16 +15,22 @@ using namespace std;
 using std::string;
 using std::fstream;
 
-
 #define HEADER_SIZE 512
+#define FILE_SIZE 33686016
 
-class VolInfo{
-	private:
-		fstream handle;			// file simple.fs
-	
+#define ALLOC_SIZE 131072
+#define DATA_SIZE 33554432
+
+#define BLOCK_SIZE 32
+#define BLOCK_NUM 16
+
+//fstream handle;
+
+class VolInfo{	
 	public:
-		int capasity;			// jumlah slot yang masih kosong
-		int firstEmpty;			// slot pertama yang masih kosong
+		uint32_t capasity;			
+		uint32_t firstEmpty;			
+		uint32_t block;	//yg blm dipake
 		time_t mount_time;		// waktu mounting, diisi di konstruktor
 	
 		/* konstruktor & destruktor */
@@ -32,22 +40,15 @@ class VolInfo{
 		void writeHeader();
 };
 
-#define ALLOC_SIZE 131072
-
-
 class AllocTable{
-	private:
-		fstream handle;
-
 	public:
 		AllocTable();
 		~AllocTable();
-};
+		void isEmpty();
+		void setEmpty();
+		void setNext();
 
-#define DATA_SIZE 33554432
-#define BLOCK_SIZE 32
-#define BLOCK_NUM 16
-#define BLOCK_TOTAL 65536
+};
 
 class DataPool{
 	private:
@@ -57,6 +58,12 @@ class DataPool{
 		DataPool();
 		~DataPool();
 		void InitRoot();
+};
+
+class Controller{
+	public:
+		Controller();
+		~Controller();
 };
 
 #endif
