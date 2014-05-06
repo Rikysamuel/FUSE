@@ -1,47 +1,60 @@
 #include "Header.h"
 
+fstream handle;
+
 VolInfo::VolInfo(){
-	time(&mount_time);
-	handle.open("tes.ccfs",fstream::in | fstream::out | fstream::binary | fstream::trunc);
-	capasity = (unsigned char) (65536);
-	firstEmpty = (unsigned char) (1);
+	capasity = (65536);
+	firstEmpty = (1);
+	block = (65536);
+	cout << capasity << firstEmpty << endl;
 	writeHeader();
 }
 
 VolInfo::~VolInfo(){
-	handle.close();
+	
 }
 
 void VolInfo::writeHeader(){
 	char buffer[HEADER_SIZE];
 	
 	/* tulis magic string ke buffer */
-	buffer[0]='C';
-	buffer[1]='C';
-	buffer[2]='F';
-	buffer[3]='S';
-	buffer[4]='C';
-	buffer[5]='C';
-	buffer[6]='F';
-	buffer[7]='S';
-
-	for(int i=8;i<36;i++){
-		buffer[i]='\0';
-	}
-	//36-48
+	memset(buffer,0,HEADER_SIZE);
+	memcpy(buffer,"CCFS",4);
+	memcpy(buffer+4,"CCFS",4);
 	
-	/* tulis available dan firstEmpty ke buffer */
-	for(int i=48;i<508;i++){
-		buffer[i]='\0';
-	}
+	uint32_t buffcapasity = htobe32(capasity);
+	uint32_t buffblockinfo = htobe32(block);
+	uint32_t buffinfofree = htobe32(firstEmpty);
+	
+	char* buffcap = (char*)&buffcapasity;
+	char* buffblock = (char*)&buffblockinfo;
+	char* buffinfo = (char*)&buffinfofree;
+
+	//36-48
+	memcpy(buffer+36,buffcap,4);
+	memcpy(buffer+40,buffblock,4);
+	memcpy(buffer+44,buffinfo,4);
+
 	/* geser pointer penulisan file ke awal */
 	buffer[508] = 'S';
 	buffer[509] = 'F';
 	buffer[510] = 'C';
 	buffer[511] = 'C';
 	handle.seekp(0);
-	
-	/* tulis buffer */
 	handle.write(buffer, HEADER_SIZE);
+	/* tulis buffer */
+}
+
+Controller::Controller(){
+	handle.open("tes.ccfs",fstream::in | fstream::out | fstream::binary | fstream::trunc);
+	VolInfo VI;
 	handle.flush();
+}
+
+Controller::~Controller(){
+
+}
+
+int main(){
+	Controller CI;
 }
