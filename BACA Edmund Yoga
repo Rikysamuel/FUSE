@@ -1,0 +1,3 @@
+buat pake fuse ternyata installnya ini "libfuse-dev"
+jadi tar sudo apt-get instal libfuse-dev
+kecil cuma 200an KB
