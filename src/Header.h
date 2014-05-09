@@ -9,8 +9,10 @@
 #include <ctime>
 #include <endian.h>
 #include <iostream>
+#include <stdexcept>
 
 using namespace std;
+using std::runtime_error;
 
 using std::string;
 using std::fstream;
@@ -30,9 +32,10 @@ class VolInfo{
 		time_t mount_time;
 	
 		/* konstruktor & destruktor */
-		VolInfo(string volname);
+		VolInfo();
 		~VolInfo();
 
+		void VolInit(string volname);
 		void writeHeader(string volname);
 		void updateVol(char first);
 };
@@ -58,7 +61,7 @@ class DataPool{
 		~DataPool();
 		void createBlock();
 		void createEntry(int block, int pos, string filename, char attr, uint16_t time, uint16_t date, uint16_t index, uint32_t fsize);
-		char * readFile(char * buffer, int begin, int number);
+		char * readFile( int begin, int number);
 		bool isDirectory();
 		void setName(int block, int entry, string name);
 		char getAttr();
@@ -69,10 +72,18 @@ class DataPool{
 };
 
 class Controller{
+	private:
+		VolInfo VI;
+		AllocTable AT[ALLOC_TABLE];
+		DataPool DP;
+
 	public:
-		Controller(string filename);
+		Controller();
 		~Controller();
 		void setAddress(char * buffer, AllocTable A, int position, unsigned short address);
+		void createNew(string filename);
+		void loadFile(string filename);
+		bool isEmptyEntry(int block, int entry);
 };
 
 #endif
