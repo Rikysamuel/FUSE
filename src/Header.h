@@ -22,8 +22,6 @@ using std::fstream;
 #define ALLOC_TABLE 65536
 #define TABLE 131072
 
-fstream handle;
-
 class VolInfo{	
 	public:
 		uint32_t capasity;		/* kapasitas block datapool 65536 block */
@@ -59,7 +57,7 @@ class DataPool{
 		DataPool();
 		~DataPool();
 		void createBlock();
-		void createEntry();
+		void createEntry(int block, int pos, string filename, char attr, uint16_t time, uint16_t date, uint16_t index, uint32_t fsize);
 		char * readFile(char * buffer, int begin, int number);
 		bool isDirectory();
 		void setName(int block, int entry, string name);

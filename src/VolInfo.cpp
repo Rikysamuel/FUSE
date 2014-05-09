@@ -1,8 +1,10 @@
 #include "Header.h"
 
+fstream handle;
+
 VolInfo::VolInfo(string volname){
-	capasity = (65536);
-	firstEmpty = (1);
+	capasity = 65536;
+	firstEmpty = 1;
 	block = capasity - firstEmpty;
 	writeHeader(volname);
 }
@@ -17,9 +19,9 @@ void VolInfo::writeHeader(string volname){
 	memcpy(buffer,"CCFS",4);
 	memcpy(buffer+4,volname.c_str(),volname.length());
 	
-	uint32_t buffcapasity = htobe32(capasity);
-	uint32_t buffblockinfo = htobe32(block);
-	uint32_t buffinfofree = htobe32(firstEmpty);
+	uint32_t buffcapasity = capasity;
+	uint32_t buffblockinfo = block;
+	uint32_t buffinfofree = firstEmpty;
 	
 	char* buffcap = (char*)&buffcapasity;			/* kapasitas */
 	char* buffblock = (char*)&buffblockinfo;		/* jumlah block tersisa */
@@ -92,15 +94,35 @@ DataPool::~DataPool(){
 
 /* Juga update firstEmpty di VolInfo */
 void DataPool::createBlock(){
-	handle.tellg();
+	int temp = handle.tellg();
 	char buffer[512];
 	memset(buffer,0,512);
 	handle.write(buffer,512);
 	handle.flush();
+	handle.seekp(temp+512);
 }
 
-void DataPool::createEntry(){
+void DataPool::createEntry(int block, int pos, string filename, char attr, uint16_t time, uint16_t date, uint16_t index, uint32_t fsize){
+	int temp = handle.tellg();
+	char buffer[32];
+	block = block+131584;
 
+	handle.seekp(block+(pos*32));
+	cout << "pointer : " << block+(pos*32) << endl;
+	memcpy(buffer,filename.c_str(),filename.length());
+	char* s_attr = (char*)&attr;
+	memcpy(buffer+21,s_attr,1);
+	char* s_time = (char*)&time;
+	memcpy(buffer+22,s_time,2);
+	char* s_date = (char*)&date;
+	memcpy(buffer+24,s_date,2);
+	char* s_index = (char*)&index;
+	memcpy(buffer+26,s_index,2);
+	char* s_fsize = (char*)&fsize;
+	memcpy(buffer+28,s_fsize,4);
+	handle.write(buffer,32);
+	handle.flush();
+	handle.seekp(temp);
 }
 
 char * DataPool::readFile(char * buffer,int begin, int number){
@@ -139,10 +161,14 @@ Controller::Controller(string filename){
 	AllocTable AT[ALLOC_TABLE];
 	memset(buffer,0,TABLE);
 	setAddress(buffer, AT[0],0,0xFFFF);
-	setAddress(buffer, AT[65535],65535,0xFFFF);
+	setAddress(buffer+131070, AT[65535],65535,0xFFCD);
+	setAddress(buffer+2, AT[1],1,0xFFFF);
 	handle.write(buffer,TABLE);
+	cout << "pointer : " << handle.tellg() << endl;
 	bool found=false;
 	int i =0;
+	
+	/* Update VolInfo */
 	while(i<ALLOC_TABLE && !found){
 		if (AT[0].isEmpty()){
 			found = true;
@@ -154,9 +180,17 @@ Controller::Controller(string filename){
 	VI.updateVol(i);
 
 	handle.flush();
+	cout << "Pointer 1 " << handle.tellg() << endl;
 	DataPool DP;
+	cout << "Pointer 2 " << handle.tellg() << endl;
 	DP.createBlock();
-	cout << handle.tellg() << endl;
+	cout << "Pointer 3 " << handle.tellg() << endl;
+	DP.createEntry(0,0,"tes.txt", 7, 21, 22, 0x1122, 123);
+	DP.createEntry(0,1,"tes1.txt", 7, 21, 22, 0x1122, 12345);
+	DP.createEntry(0,2,"tes2.txt", 7, 21, 22, 0x1122, 12367);
+	DP.createEntry(0,4,"tes2.txt", 7, 21, 22, 0x1122, 12367);
+	DP.createEntry(0,15,"tescoba.txt", 7, 21, 22, 0xDDFF, 12367);
+	DP.createBlock();
 }
 
 Controller::~Controller(){
@@ -168,9 +202,11 @@ void Controller::setAddress(char * buffer, AllocTable A, int position, unsigned 
 	int temp = handle.tellg();
 	handle.seekp(position);
 	A.setAddress(address);
-	buffer[position-512] = A.getAddress();
-	buffer[position-512+1] = A.getAddress();
+	unsigned short _addr = A.getAddress();
+	char buff[2];
+	memcpy((char*)buff,&_addr,2);
+	memcpy(buffer,buff,2);
 	handle.write(buffer,4);
 	handle.flush();
-	handle.seekp(temp);
+	handle.seekp(temp); 
 }
