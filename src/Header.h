@@ -62,22 +62,14 @@ class DataPool{
 		void createBlock();
 		void createEntry(int block, int pos, string filename, char attr, uint16_t time, uint16_t date, uint16_t index, uint32_t fsize);
 		char * readFile( int begin, int number);
-		bool isDirectory();
-		void setName(int block, int entry, string name);
-		char getAttr();
-		unsigned short MakeTime();
-		unsigned short MakeDate();
-		unsigned short setPointer();
-		int size();
 };
 
 class Controller{
-	private:
+	public:
 		VolInfo VI;
 		AllocTable AT[ALLOC_TABLE];
 		DataPool DP;
-
-	public:
+		
 		Controller();
 		~Controller();
 		void setAddress(char * buffer, AllocTable A, int position, unsigned short address);
