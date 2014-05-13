@@ -110,6 +110,7 @@ void DataPool::createEntry(int block, int pos, string filename, char attr, uint1
 	char buffer[32];
 	block = (512*block)+131584;		/* 131584 : pointer terakhir setelah alloc table */
 
+	file_size = fsize;
 	handle.seekp(block+(pos*32));
 
 	/* Tulis info entri */

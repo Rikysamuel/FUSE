@@ -56,6 +56,7 @@ class AllocTable{
 class DataPool{
 	public:
 		char attribute;
+		uint32_t file_size;
 
 		DataPool();
 		~DataPool();
